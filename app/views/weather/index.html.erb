@@ -1,0 +1,8 @@
+<div class="form-place">
+  <%= form_tag("/search", method: "get", class: "form-inline justify-content-center") do %>
+      <%= text_field_tag(:city, nil, class: "form-control my-2 mr-sm-2",
+                         placeholder: "City", required: true) %>
+
+      <%= submit_tag("Search", class: "btn btn-outline-success my-2 my-sm-0") %>
+  <% end %>
+</div>

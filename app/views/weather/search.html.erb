@@ -1,0 +1,96 @@
+<div class="form-place">
+  <%= form_tag("/search", method: "get",remote: true, id: 'search_form') do %>
+      <%= text_field_tag(:city, nil,
+                         placeholder: "City", id:'city', required: true) %>
+
+      <%= submit_tag("Search") %>
+  <% end %>
+  <div class="city-error-msg" style="color:red">
+    Unknown city
+  </div>
+  <div class="weather-container row">
+    <%#= render 'city_weather' %>
+  </div>
+</div>
+
+<%= @weather %>
+<script>
+
+    const cityInput = $('#city');
+
+    let currentCity = '';
+  //
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            function success(position) {
+
+                $.get(
+                    'https://api.opencagedata.com/geocode/v1/json?q='+position.coords.latitude+'+'+ position.coords.longitude +'&key=792826444df8451c961567ce8a2a91c7&language=en&pretty=1',
+                    function(response) {
+                        currentCity = response.results[0].components.city;
+                        cityInput.val(currentCity);
+                        $('form').submit();
+
+                    }
+                )
+            },
+            function error(error_message) {
+                // for when getting location results in an error
+                alert('An error has occured while retrieving location', error_message)
+            }
+        )}
+     else {
+        alert('geolocation is not enabled on this browser')
+    }
+
+    const form = $('#search_form');
+    const cityErrorMessage = $('.city-error-msg');
+    cityErrorMessage.hide();
+
+
+    const appendCityBlock = (response,data) => {
+        if (JSON.parse(data).weather) {
+            $('.weather-container').append('<%= j render "city_weather" %>');
+
+            let respData = JSON.parse(data).weather.table;
+            const weatherObj = {
+                city: respData.name,
+                description: respData.weather[0].table.description,
+                temperature: respData.main.table.temp,
+                minTemperature: respData.main.table.temp_min,
+                maxTemperature: respData.main.table.temp_max,
+                windSpeed: respData.wind.table.speed,
+                windDeg: respData.wind.table.deg,
+                humidity: respData.main.table.humidity,
+                pressure: respData.main.table.pressure,
+            }
+
+            let cityWeatherContainer = $('.city-weather-container:last-of-type');
+
+            let cityElement = cityWeatherContainer.find('.city');
+            let descriptionElement = cityWeatherContainer.find('.description');
+            let minTemperatureElement = cityWeatherContainer.find('.min-temperature');
+            let maxTemperatureElement = cityWeatherContainer.find('.max-temperature');
+            let windDegElement = cityWeatherContainer.find('.wind-deg');
+            let windSpeedElement = cityWeatherContainer.find('.wind-speed');
+            let humidityElement = cityWeatherContainer.find('.humidity');
+            let pressureElement = cityWeatherContainer.find('.pressure');
+
+            cityElement.html(weatherObj.city);
+            descriptionElement.html(weatherObj.description);
+            minTemperatureElement.html(weatherObj.minTemperature);
+            maxTemperatureElement.html(weatherObj.maxTemperature);
+            windDegElement.html(weatherObj.windDeg);
+            windSpeedElement.html(weatherObj.windSpeed);
+            humidityElement.html(weatherObj.humidity);
+            pressureElement.html(weatherObj.pressure);
+
+            cityErrorMessage.hide();
+
+        } else {
+            cityErrorMessage.show();
+        }
+    }
+
+    form.bind('ajax:success', appendCityBlock)
+</script>
